@@ -1,5 +1,16 @@
 [workspace]
 
+[workspace.lints.clippy]
+correctness = "deny"
+suspicious = "deny"
+complexity = "warn"
+perf = "deny"
+style = "deny"
+pedantic = "deny"
+
+[lints]
+workspace = true
+
 [package]
 name = "mininventar"
 version = "0.1.0"
