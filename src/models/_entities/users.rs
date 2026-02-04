@@ -6,24 +6,24 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(table_name = "users")]
 pub struct Model {
-    pub created_at: DateTimeWithTimeZone,
-    pub updated_at: DateTimeWithTimeZone,
-    #[sea_orm(primary_key)]
-    pub id: i32,
-    pub pid: Uuid,
-    #[sea_orm(unique)]
-    pub email: String,
-    pub password: String,
     #[sea_orm(unique)]
     pub api_key: String,
-    pub name: String,
-    pub reset_token: Option<String>,
-    pub reset_sent_at: Option<DateTimeWithTimeZone>,
-    pub email_verification_token: Option<String>,
+    pub created_at: DateTimeWithTimeZone,
+    #[sea_orm(unique)]
+    pub email: String,
     pub email_verification_sent_at: Option<DateTimeWithTimeZone>,
+    pub email_verification_token: Option<String>,
     pub email_verified_at: Option<DateTimeWithTimeZone>,
-    pub magic_link_token: Option<String>,
+    #[sea_orm(primary_key)]
+    pub id: i32,
     pub magic_link_expiration: Option<DateTimeWithTimeZone>,
+    pub magic_link_token: Option<String>,
+    pub name: String,
+    pub password: String,
+    pub pid: Uuid,
+    pub reset_sent_at: Option<DateTimeWithTimeZone>,
+    pub reset_token: Option<String>,
+    pub updated_at: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

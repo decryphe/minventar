@@ -15,10 +15,6 @@ pub struct ViewEngineInitializer;
 
 #[async_trait]
 impl Initializer for ViewEngineInitializer {
-    fn name(&self) -> String {
-        "view-engine".to_string()
-    }
-
     async fn after_routes(&self, router: AxumRouter, _ctx: &AppContext) -> Result<AxumRouter> {
         let tera_engine = if std::path::Path::new(I18N_DIR).exists() {
             let arc = std::sync::Arc::new(
@@ -39,5 +35,9 @@ impl Initializer for ViewEngineInitializer {
         };
 
         Ok(router.layer(Extension(ViewEngine::from(tera_engine))))
+    }
+
+    fn name(&self) -> String {
+        "view-engine".to_string()
     }
 }

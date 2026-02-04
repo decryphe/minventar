@@ -19,16 +19,16 @@ pub struct LoginParams {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct RegisterParams {
     pub email: String,
-    pub password: String,
     pub name: String,
+    pub password: String,
 }
 
 #[derive(Debug, Validate, Deserialize)]
 pub struct Validator {
-    #[validate(length(min = 2, message = "Name must be at least 2 characters long."))]
-    pub name: String,
     #[validate(email(message = "invalid email"))]
     pub email: String,
+    #[validate(length(min = 2, message = "Name must be at least 2 characters long."))]
+    pub name: String,
 }
 
 impl Validatable for ActiveModel {
@@ -78,6 +78,64 @@ impl Authenticable for Model {
 }
 
 impl Model {
+    /// Asynchronously creates a user with a password and saves it to the
+    /// database.
+    ///
+    /// # Errors
+    ///
+    /// When could not save the user into the DB
+    pub async fn create_with_password(
+        db: &DatabaseConnection,
+        params: &RegisterParams,
+    ) -> ModelResult<Self> {
+        let txn = db.begin().await?;
+
+        if users::Entity::find()
+            .filter(
+                model::query::condition()
+                    .eq(users::Column::Email, &params.email)
+                    .build(),
+            )
+            .one(&txn)
+            .await?
+            .is_some()
+        {
+            return Err(ModelError::EntityAlreadyExists {});
+        }
+
+        let password_hash =
+            hash::hash_password(&params.password).map_err(|e| ModelError::Any(e.into()))?;
+        let user = users::ActiveModel {
+            email: ActiveValue::set(params.email.clone()),
+            password: ActiveValue::set(password_hash),
+            name: ActiveValue::set(params.name.clone()),
+            ..Default::default()
+        }
+        .insert(&txn)
+        .await?;
+
+        txn.commit().await?;
+
+        Ok(user)
+    }
+
+    /// finds a user by the provided api key
+    ///
+    /// # Errors
+    ///
+    /// When could not find user by the given token or DB query error
+    pub async fn find_by_api_key(db: &DatabaseConnection, api_key: &str) -> ModelResult<Self> {
+        let user = users::Entity::find()
+            .filter(
+                model::query::condition()
+                    .eq(users::Column::ApiKey, api_key)
+                    .build(),
+            )
+            .one(db)
+            .await?;
+        user.ok_or_else(|| ModelError::EntityNotFound)
+    }
+
     /// finds a user by the provided email
     ///
     /// # Errors
@@ -88,26 +146,6 @@ impl Model {
             .filter(
                 model::query::condition()
                     .eq(users::Column::Email, email)
-                    .build(),
-            )
-            .one(db)
-            .await?;
-        user.ok_or_else(|| ModelError::EntityNotFound)
-    }
-
-    /// finds a user by the provided verification token
-    ///
-    /// # Errors
-    ///
-    /// When could not find user by the given token or DB query error
-    pub async fn find_by_verification_token(
-        db: &DatabaseConnection,
-        token: &str,
-    ) -> ModelResult<Self> {
-        let user = users::Entity::find()
-            .filter(
-                model::query::condition()
-                    .eq(users::Column::EmailVerificationToken, token)
                     .build(),
             )
             .one(db)
@@ -151,23 +189,6 @@ impl Model {
         }
     }
 
-    /// finds a user by the provided reset token
-    ///
-    /// # Errors
-    ///
-    /// When could not find user by the given token or DB query error
-    pub async fn find_by_reset_token(db: &DatabaseConnection, token: &str) -> ModelResult<Self> {
-        let user = users::Entity::find()
-            .filter(
-                model::query::condition()
-                    .eq(users::Column::ResetToken, token)
-                    .build(),
-            )
-            .one(db)
-            .await?;
-        user.ok_or_else(|| ModelError::EntityNotFound)
-    }
-
     /// finds a user by the provided pid
     ///
     /// # Errors
@@ -186,16 +207,16 @@ impl Model {
         user.ok_or_else(|| ModelError::EntityNotFound)
     }
 
-    /// finds a user by the provided api key
+    /// finds a user by the provided reset token
     ///
     /// # Errors
     ///
     /// When could not find user by the given token or DB query error
-    pub async fn find_by_api_key(db: &DatabaseConnection, api_key: &str) -> ModelResult<Self> {
+    pub async fn find_by_reset_token(db: &DatabaseConnection, token: &str) -> ModelResult<Self> {
         let user = users::Entity::find()
             .filter(
                 model::query::condition()
-                    .eq(users::Column::ApiKey, api_key)
+                    .eq(users::Column::ResetToken, token)
                     .build(),
             )
             .one(db)
@@ -203,55 +224,24 @@ impl Model {
         user.ok_or_else(|| ModelError::EntityNotFound)
     }
 
-    /// Verifies whether the provided plain password matches the hashed password
+    /// finds a user by the provided verification token
     ///
     /// # Errors
     ///
-    /// when could not verify password
-    #[must_use]
-    pub fn verify_password(&self, password: &str) -> bool {
-        hash::verify_password(password, &self.password)
-    }
-
-    /// Asynchronously creates a user with a password and saves it to the
-    /// database.
-    ///
-    /// # Errors
-    ///
-    /// When could not save the user into the DB
-    pub async fn create_with_password(
+    /// When could not find user by the given token or DB query error
+    pub async fn find_by_verification_token(
         db: &DatabaseConnection,
-        params: &RegisterParams,
+        token: &str,
     ) -> ModelResult<Self> {
-        let txn = db.begin().await?;
-
-        if users::Entity::find()
+        let user = users::Entity::find()
             .filter(
                 model::query::condition()
-                    .eq(users::Column::Email, &params.email)
+                    .eq(users::Column::EmailVerificationToken, token)
                     .build(),
             )
-            .one(&txn)
-            .await?
-            .is_some()
-        {
-            return Err(ModelError::EntityAlreadyExists {});
-        }
-
-        let password_hash =
-            hash::hash_password(&params.password).map_err(|e| ModelError::Any(e.into()))?;
-        let user = users::ActiveModel {
-            email: ActiveValue::set(params.email.clone()),
-            password: ActiveValue::set(password_hash),
-            name: ActiveValue::set(params.name.clone()),
-            ..Default::default()
-        }
-        .insert(&txn)
-        .await?;
-
-        txn.commit().await?;
-
-        Ok(user)
+            .one(db)
+            .await?;
+        user.ok_or_else(|| ModelError::EntityNotFound)
     }
 
     /// Creates a JWT
@@ -264,9 +254,69 @@ impl Model {
             .generate_token(expiration, self.pid.to_string(), Map::new())
             .map_err(ModelError::from)
     }
+
+    /// Verifies whether the provided plain password matches the hashed password
+    ///
+    /// # Errors
+    ///
+    /// when could not verify password
+    #[must_use]
+    pub fn verify_password(&self, password: &str) -> bool {
+        hash::verify_password(password, &self.password)
+    }
 }
 
 impl ActiveModel {
+    /// Verifies and invalidates the magic link after successful authentication.
+    ///
+    /// Clears the magic link token and expiration time after the user has
+    /// successfully authenticated using the magic link.
+    ///
+    /// # Errors
+    /// - Returns an error if database update fails
+    pub async fn clear_magic_link(mut self, db: &DatabaseConnection) -> ModelResult<Model> {
+        self.magic_link_token = ActiveValue::set(None);
+        self.magic_link_expiration = ActiveValue::set(None);
+        self.update(db).await.map_err(ModelError::from)
+    }
+
+    /// Creates a magic link token for passwordless authentication.
+    ///
+    /// Generates a random token with a specified length and sets an expiration time
+    /// for the magic link. This method is used to initiate the magic link authentication flow.
+    ///
+    /// # Errors
+    /// - Returns an error if database update fails
+    pub async fn create_magic_link(mut self, db: &DatabaseConnection) -> ModelResult<Model> {
+        let random_str = hash::random_string(MAGIC_LINK_LENGTH as usize);
+        let expired = Local::now() + Duration::minutes(MAGIC_LINK_EXPIRATION_MIN.into());
+
+        self.magic_link_token = ActiveValue::set(Some(random_str));
+        self.magic_link_expiration = ActiveValue::set(Some(expired.into()));
+        self.update(db).await.map_err(ModelError::from)
+    }
+
+    /// Resets the current user password with a new password and
+    /// updates it in the database.
+    ///
+    /// This method hashes the provided password and sets it as the new password
+    /// for the user.
+    ///
+    /// # Errors
+    ///
+    /// when has DB query error or could not hashed the given password
+    pub async fn reset_password(
+        mut self,
+        db: &DatabaseConnection,
+        password: &str,
+    ) -> ModelResult<Model> {
+        self.password =
+            ActiveValue::set(hash::hash_password(password).map_err(|e| ModelError::Any(e.into()))?);
+        self.reset_token = ActiveValue::Set(None);
+        self.reset_sent_at = ActiveValue::Set(None);
+        self.update(db).await.map_err(ModelError::from)
+    }
+
     /// Sets the email verification information for the user and
     /// updates it in the database.
     ///
@@ -314,56 +364,6 @@ impl ActiveModel {
     /// when has DB query error
     pub async fn verified(mut self, db: &DatabaseConnection) -> ModelResult<Model> {
         self.email_verified_at = ActiveValue::set(Some(Local::now().into()));
-        self.update(db).await.map_err(ModelError::from)
-    }
-
-    /// Resets the current user password with a new password and
-    /// updates it in the database.
-    ///
-    /// This method hashes the provided password and sets it as the new password
-    /// for the user.
-    ///
-    /// # Errors
-    ///
-    /// when has DB query error or could not hashed the given password
-    pub async fn reset_password(
-        mut self,
-        db: &DatabaseConnection,
-        password: &str,
-    ) -> ModelResult<Model> {
-        self.password =
-            ActiveValue::set(hash::hash_password(password).map_err(|e| ModelError::Any(e.into()))?);
-        self.reset_token = ActiveValue::Set(None);
-        self.reset_sent_at = ActiveValue::Set(None);
-        self.update(db).await.map_err(ModelError::from)
-    }
-
-    /// Creates a magic link token for passwordless authentication.
-    ///
-    /// Generates a random token with a specified length and sets an expiration time
-    /// for the magic link. This method is used to initiate the magic link authentication flow.
-    ///
-    /// # Errors
-    /// - Returns an error if database update fails
-    pub async fn create_magic_link(mut self, db: &DatabaseConnection) -> ModelResult<Model> {
-        let random_str = hash::random_string(MAGIC_LINK_LENGTH as usize);
-        let expired = Local::now() + Duration::minutes(MAGIC_LINK_EXPIRATION_MIN.into());
-
-        self.magic_link_token = ActiveValue::set(Some(random_str));
-        self.magic_link_expiration = ActiveValue::set(Some(expired.into()));
-        self.update(db).await.map_err(ModelError::from)
-    }
-
-    /// Verifies and invalidates the magic link after successful authentication.
-    ///
-    /// Clears the magic link token and expiration time after the user has
-    /// successfully authenticated using the magic link.
-    ///
-    /// # Errors
-    /// - Returns an error if database update fails
-    pub async fn clear_magic_link(mut self, db: &DatabaseConnection) -> ModelResult<Model> {
-        self.magic_link_token = ActiveValue::set(None);
-        self.magic_link_expiration = ActiveValue::set(None);
         self.update(db).await.map_err(ModelError::from)
     }
 }

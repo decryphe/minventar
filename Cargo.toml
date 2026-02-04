@@ -3,10 +3,11 @@
 [workspace.lints.clippy]
 correctness = "deny"
 suspicious = "deny"
-complexity = "warn"
+complexity = { level = "warn", priority = -1 }
 perf = "deny"
 style = "deny"
 pedantic = "deny"
+arbitrary_source_item_ordering = "deny"
 
 [lints]
 workspace = true

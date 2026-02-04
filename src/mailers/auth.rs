@@ -14,30 +14,6 @@ static magic_link: Dir<'_> = include_dir!("src/mailers/auth/magic_link");
 pub struct AuthMailer {}
 impl Mailer for AuthMailer {}
 impl AuthMailer {
-    /// Sending welcome email the the given user
-    ///
-    /// # Errors
-    ///
-    /// When email sending is failed
-    pub async fn send_welcome(ctx: &AppContext, user: &users::Model) -> Result<()> {
-        Self::mail_template(
-            ctx,
-            &welcome,
-            mailer::Args {
-                to: user.email.clone(),
-                locals: json!({
-                  "name": user.name,
-                  "verifyToken": user.email_verification_token,
-                  "domain": ctx.config.server.full_url()
-                }),
-                ..Default::default()
-            },
-        )
-        .await?;
-
-        Ok(())
-    }
-
     /// Sending forgot password email
     ///
     /// # Errors
@@ -79,6 +55,30 @@ impl AuthMailer {
                             "the user model not contains magic link token",
                     ))?,
                   "host": ctx.config.server.full_url()
+                }),
+                ..Default::default()
+            },
+        )
+        .await?;
+
+        Ok(())
+    }
+
+    /// Sending welcome email the the given user
+    ///
+    /// # Errors
+    ///
+    /// When email sending is failed
+    pub async fn send_welcome(ctx: &AppContext, user: &users::Model) -> Result<()> {
+        Self::mail_template(
+            ctx,
+            &welcome,
+            mailer::Args {
+                to: user.email.clone(),
+                locals: json!({
+                  "name": user.name,
+                  "verifyToken": user.email_verification_token,
+                  "domain": ctx.config.server.full_url()
                 }),
                 ..Default::default()
             },

@@ -43,10 +43,20 @@ impl Hooks for App {
         create_app::<Self, Migrator>(mode, environment, config).await
     }
 
+    async fn connect_workers(ctx: &AppContext, queue: &Queue) -> Result<()> {
+        queue.register(DownloadWorker::build(ctx)).await?;
+        Ok(())
+    }
+
     async fn initializers(_ctx: &AppContext) -> Result<Vec<Box<dyn Initializer>>> {
         Ok(vec![Box::new(
             initializers::view_engine::ViewEngineInitializer,
         )])
+    }
+
+    #[allow(unused_variables)]
+    fn register_tasks(tasks: &mut Tasks) {
+        // tasks-inject (do not remove)
     }
 
     fn routes(_ctx: &AppContext) -> AppRoutes {
@@ -55,22 +65,15 @@ impl Hooks for App {
             .add_route(controllers::dictionary::routes())
             .add_route(controllers::auth::routes())
     }
-    async fn connect_workers(ctx: &AppContext, queue: &Queue) -> Result<()> {
-        queue.register(DownloadWorker::build(ctx)).await?;
-        Ok(())
-    }
 
-    #[allow(unused_variables)]
-    fn register_tasks(tasks: &mut Tasks) {
-        // tasks-inject (do not remove)
-    }
-    async fn truncate(ctx: &AppContext) -> Result<()> {
-        truncate_table(&ctx.db, users::Entity).await?;
-        Ok(())
-    }
     async fn seed(ctx: &AppContext, base: &Path) -> Result<()> {
         db::seed::<users::ActiveModel>(&ctx.db, &base.join("users.yaml").display().to_string())
             .await?;
+        Ok(())
+    }
+
+    async fn truncate(ctx: &AppContext) -> Result<()> {
+        truncate_table(&ctx.db, users::Entity).await?;
         Ok(())
     }
 }
