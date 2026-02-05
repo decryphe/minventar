@@ -1,31 +1,42 @@
 use loco_rs::testing::prelude::*;
-use mininventar::app::App;
+use mininventar::{
+    app::App,
+    models::inventory_items::{InventoryItemParams, Model as InventoryItemModel},
+};
 use serial_test::serial;
-
-macro_rules! configure_insta {
-    ($($expr:expr),*) => {
-        let mut settings = insta::Settings::clone_current();
-        settings.set_prepend_module_to_snapshot(false);
-        let _guard = settings.bind_to_scope();
-    };
-}
 
 #[tokio::test]
 #[serial]
-async fn test_model() {
-    configure_insta!();
-
+async fn can_create_and_adjust_inventory_stock() {
     let boot = boot_test::<App>().await.unwrap();
     seed::<App>(&boot.app_context).await.unwrap();
 
-    // query your model, e.g.:
-    //
-    // let item = models::posts::Model::find_by_pid(
-    //     &boot.app_context.db,
-    //     "11111111-1111-1111-1111-111111111111",
-    // )
-    // .await;
+    let item = InventoryItemModel::create(
+        &boot.app_context.db,
+        &InventoryItemParams {
+            barcode: Some("111".to_string()),
+            item_type: Some("widget".to_string()),
+            manufacturer: Some("Acme".to_string()),
+            min_stock_qty: 3,
+            name: "Washer".to_string(),
+            order_source: Some("Catalog".to_string()),
+            ordered: false,
+            product_number: Some("WX-1".to_string()),
+            size: Some("M".to_string()),
+            stock_qty: 1,
+            uom: Some("pcs".to_string()),
+        },
+    )
+    .await
+    .unwrap();
 
-    // snapshot the result:
-    // assert_debug_snapshot!(item);
+    let increased = InventoryItemModel::adjust_stock(&boot.app_context.db, item.id, 2)
+        .await
+        .unwrap();
+    assert_eq!(increased.stock_qty, 3);
+
+    let reduced = InventoryItemModel::adjust_stock(&boot.app_context.db, item.id, -10)
+        .await
+        .unwrap();
+    assert_eq!(reduced.stock_qty, 0);
 }

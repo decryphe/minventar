@@ -1,0 +1,184 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Inventory · Minventar{% endblock title %}
+
+{% block content %}
+{% set item_count = items | length %}
+{% set needs_attention = 0 %}
+{% for item in items %}
+    {% if item.stock_qty <= item.min_stock_qty %}
+        {% set_global needs_attention = needs_attention + 1 %}
+    {% endif %}
+{% endfor %}
+<section class="app-card p-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-4">
+        <div>
+            <h2 class="h4 mb-1">Current stock</h2>
+            <p class="app-subtle mb-0">Find items quickly, update stock levels, and keep an eye on what needs reordering.</p>
+        </div>
+        <div class="d-flex flex-column align-items-stretch gap-3 col-lg-6 px-0">
+            <div class="d-flex flex-wrap justify-content-lg-end gap-3">
+                <div class="app-metric px-3 py-2 text-center">
+                    <div class="small text-uppercase app-subtle mb-1">Tracked</div>
+                    <div class="h5 fw-semibold mb-0">{{ item_count }}</div>
+                </div>
+                <div class="app-metric px-3 py-2 text-center">
+                    <div class="small text-uppercase app-subtle mb-1">Needs Order</div>
+                    <div class="h5 fw-semibold mb-0">{{ needs_attention }}</div>
+                </div>
+                <a class="btn btn-primary align-self-center" href="/inventory/new">Add inventory item</a>
+            </div>
+            <input
+                class="form-control app-search"
+                id="inventory-search"
+                type="search"
+                placeholder="Search by name, barcode, manufacturer, or product number"
+            />
+        </div>
+    </div>
+
+    {% if item_count == 0 %}
+        <div class="text-center py-5">
+            <h3 class="h5 mb-2">No inventory yet</h3>
+            <p class="app-subtle mb-4">Create the first tracked item to start using the stock and reorder workflow.</p>
+            <a class="btn btn-primary" href="/inventory/new">Add first item</a>
+        </div>
+    {% else %}
+        <div class="small app-subtle mb-3" id="inventory-search-status">
+            Showing all {{ item_count }} items.
+        </div>
+        <div class="alert alert-warning d-none" id="inventory-search-empty" role="alert">
+            No inventory items match this search.
+        </div>
+        <div class="table-responsive">
+            <table class="table app-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Manufacturer</th>
+                        <th>Barcode</th>
+                        <th>Product #</th>
+                        <th>Stock</th>
+                        <th>Reorder</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                        {% set low_stock = item.stock_qty <= item.min_stock_qty %}
+                        <tr
+                            id="item-{{ item.id }}"
+                            data-search="{{ item.name | default(value='') | lower }} {{ item.barcode | default(value='') | lower }} {{ item.manufacturer | default(value='') | lower }} {{ item.product_number | default(value='') | lower }} {{ item.item_type | default(value='') | lower }} {{ item.order_source | default(value='') | lower }}"
+                        >
+                            <td>
+                                <div class="fw-semibold">{{ item.name }}</div>
+                                <div class="small app-subtle">
+                                    {% if item.item_type %}{{ item.item_type }}{% else %}Uncategorized item{% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                {{ item.manufacturer | default(value='-') }}
+                            </td>
+                            <td>
+                                {{ item.barcode | default(value='-') }}
+                            </td>
+                            <td>
+                                {{ item.product_number | default(value='-') }}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <form action="/inventory/{{ item.id }}/adjust" method="post" class="m-0">
+                                        <input type="hidden" name="delta" value="-1" />
+                                        <button class="btn btn-outline-secondary btn-sm" type="submit">-1</button>
+                                    </form>
+                                    <div class="text-center px-2">
+                                        <div class="fw-semibold">{{ item.stock_qty }} {% if item.uom %}{{ item.uom }}{% endif %}</div>
+                                        <div class="small {% if low_stock %}text-danger{% else %}app-subtle{% endif %}">
+                                            Min {{ item.min_stock_qty }}
+                                        </div>
+                                    </div>
+                                    <form action="/inventory/{{ item.id }}/adjust" method="post" class="m-0">
+                                        <input type="hidden" name="delta" value="1" />
+                                        <button class="btn btn-outline-secondary btn-sm" type="submit">+1</button>
+                                    </form>
+                                </div>
+                            </td>
+                            <td>
+                                {% if low_stock %}
+                                    <span class="badge text-bg-warning">Below minimum</span>
+                                    {% if item.ordered %}
+                                        <div class="small text-success mt-1">Already marked as ordered</div>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge text-bg-light">Healthy</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                    <a class="btn btn-sm btn-outline-primary" href="/inventory/{{ item.id }}/edit">Edit</a>
+                                    <form action="/inventory/{{ item.id }}/ordered" method="post" class="m-0">
+                                        {% if not item.ordered %}
+                                            <input type="hidden" name="ordered" value="true" />
+                                        {% endif %}
+                                        <button class="btn btn-sm {% if item.ordered %}btn-outline-success{% else %}btn-outline-warning{% endif %}" type="submit">
+                                            {% if item.ordered %}Ordered{% else %}Mark ordered{% endif %}
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</section>
+{% endblock content %}
+
+{% block scripts %}
+<script>
+    const searchInput = document.getElementById("inventory-search");
+    const searchStatus = document.getElementById("inventory-search-status");
+    const searchEmpty = document.getElementById("inventory-search-empty");
+    if (searchInput) {
+        const rows = Array.from(document.querySelectorAll("tr[data-search]"));
+
+        searchInput.addEventListener("input", () => {
+            const query = searchInput.value.trim().toLowerCase();
+            let firstMatch = null;
+            let visibleCount = 0;
+
+            rows.forEach((row) => {
+                const matches = !query || row.dataset.search.includes(query);
+                row.classList.remove("table-warning");
+                row.classList.toggle("d-none", !matches);
+
+                if (matches) {
+                    visibleCount += 1;
+                    if (!firstMatch) {
+                        firstMatch = row;
+                    }
+                }
+            });
+
+            if (searchEmpty) {
+                searchEmpty.classList.toggle("d-none", visibleCount !== 0);
+            }
+
+            if (searchStatus) {
+                if (!query) {
+                    searchStatus.textContent = `Showing all ${rows.length} items.`;
+                } else {
+                    searchStatus.textContent = `Showing ${visibleCount} matching item${visibleCount === 1 ? "" : "s"} for "${searchInput.value.trim()}".`;
+                }
+            }
+
+            if (firstMatch && query) {
+                firstMatch.scrollIntoView({ behavior: "smooth", block: "center" });
+                firstMatch.classList.add("table-warning");
+                window.setTimeout(() => firstMatch.classList.remove("table-warning"), 1200);
+            }
+        });
+    }
+</script>
+{% endblock scripts %}

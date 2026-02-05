@@ -1,14 +1,17 @@
 [workspace]
 
+[workspace.lints.rust]
+rust_2018_idioms = "deny"
+
 [workspace.lints.clippy]
-correctness = "deny"
-suspicious = "deny"
+correctness = { level = "deny", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
 complexity = { level = "warn", priority = -1 }
-perf = "deny"
-style = "deny"
-pedantic = "deny"
+perf = { level = "deny", priority = -1 }
+style = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
 arbitrary_source_item_ordering = "deny"
-rust-2018-idioms = "deny"
+missing_errors_doc = "allow"
 
 [lints]
 workspace = true

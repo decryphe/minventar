@@ -1,13 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "layout/base.html" %}
 
-<head>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
-</head>
+{% block title %}Dictionary · Minventar{% endblock title %}
 
-<body class="prose p-10">
-    <h1>View list</h1>
-    Find me in <code>dictionary/list</code>
-</body>
+{% block content %}
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+        <p class="text-uppercase text-body-secondary small mb-1">Dictionary</p>
+        <h1 class="h4 mb-1">Dictionary entries</h1>
+        <p class="text-muted mb-0">
+            Central place for predefined values grouped by category. Use them to speed up form inputs.
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary disabled" type="button" aria-disabled="true">
+            Add entry
+        </button>
+        <button class="btn btn-outline-secondary disabled" type="button" aria-disabled="true">
+            Import CSV
+        </button>
+    </div>
+</div>
 
-</html>
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="alert alert-info mb-0" role="alert">
+            Dictionary list UI coming soon. Hook this page up to SeaORM entities and render grouped tables here.
+        </div>
+    </div>
+</div>
+{% endblock content %}

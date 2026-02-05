@@ -1,0 +1,119 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Dictionary · Minventar{% endblock title %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-5">
+        <section class="app-card p-4 p-lg-5 app-form-panel">
+            <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+                <div>
+                    <h1 class="h3 mb-2">{% if is_edit %}Edit entry{% else %}Add dictionary entry{% endif %}</h1>
+                    <p class="app-subtle mb-0">Keep reusable values grouped by category so the inventory form can autocomplete common fields.</p>
+                </div>
+                {% if is_edit %}
+                    <a class="btn btn-outline-secondary" href="/dictionary">New entry</a>
+                {% endif %}
+            </div>
+
+            <form action="/dictionary/save" method="post" class="row g-3">
+                {% if is_edit %}
+                    <input type="hidden" name="id" value="{{ current_entry.id }}" />
+                {% endif %}
+                <div class="col-12">
+                    <label class="form-label fw-semibold" for="category">Category</label>
+                    <select class="form-select" id="category" name="category" required>
+                        <option value="">Choose a category</option>
+                        <option value="manufacturer" {% if current_entry.category | default(value='') == "manufacturer" %}selected{% endif %}>Manufacturer</option>
+                        <option value="item_type" {% if current_entry.category | default(value='') == "item_type" %}selected{% endif %}>Type</option>
+                        <option value="size" {% if current_entry.category | default(value='') == "size" %}selected{% endif %}>Size</option>
+                        <option value="uom" {% if current_entry.category | default(value='') == "uom" %}selected{% endif %}>Unit</option>
+                        <option value="order_source" {% if current_entry.category | default(value='') == "order_source" %}selected{% endif %}>Order source</option>
+                        {% for group in entry_groups %}
+                            {% if group.category != "manufacturer" and group.category != "item_type" and group.category != "size" and group.category != "uom" and group.category != "order_source" %}
+                                <option value="{{ group.category }}" {% if current_entry.category | default(value='') == group.category %}selected{% endif %}>
+                                    {{ group.category }}
+                                </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold" for="value">Value</label>
+                    <input class="form-control" id="value" name="value" value="{{ current_entry.value | default(value='') }}" required />
+                </div>
+                <div class="col-12 d-flex gap-2 pt-2">
+                    <button class="btn btn-primary" type="submit">{% if is_edit %}Save entry{% else %}Add entry{% endif %}</button>
+                    <a class="btn btn-outline-secondary" href="/inventory/new">Use in inventory form</a>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <div class="col-lg-7">
+        <section class="app-card p-4 p-lg-5">
+            <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+                <div>
+                    <h2 class="h4 mb-1">Current entries</h2>
+                    <p class="app-subtle mb-0">Categories stay flat and intentionally simple.</p>
+                </div>
+                <div class="display-6 fw-semibold">
+                    {% set count = 0 %}
+                    {% for group in entry_groups %}
+                        {% set group_count = group.entries | length %}
+                        {% set_global count = count + group_count %}
+                    {% endfor %}
+                    {{ count }}
+                </div>
+            </div>
+
+            {% if entry_groups | length == 0 %}
+                <div class="text-center py-5">
+                    <h3 class="h5 mb-2">No dictionary entries yet</h3>
+                    <p class="app-subtle mb-0">Create a few shared values to speed up inventory edits.</p>
+                </div>
+            {% else %}
+                <div class="app-stack">
+                    {% for group in entry_groups %}
+                        <div class="border rounded-4 p-3 bg-white">
+                            <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+                                <div>
+                                    <h3 class="h6 mb-1">
+                                        {% if group.category == "manufacturer" %}
+                                            Manufacturer
+                                        {% elif group.category == "item_type" %}
+                                            Type
+                                        {% elif group.category == "size" %}
+                                            Size
+                                        {% elif group.category == "uom" %}
+                                            Unit
+                                        {% elif group.category == "order_source" %}
+                                            Order source
+                                        {% else %}
+                                            {{ group.category }}
+                                        {% endif %}
+                                    </h3>
+                                    <div class="small app-subtle">{{ group.entries | length }} entries</div>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-column gap-2">
+                                {% for entry in group.entries %}
+                                    <div class="border rounded-3 px-3 py-2 d-flex justify-content-between align-items-center gap-3">
+                                        <div class="fw-semibold">{{ entry.value }}</div>
+                                        <div class="d-flex gap-2">
+                                            <a class="btn btn-sm btn-outline-primary" href="/dictionary/{{ entry.id }}/edit">Edit</a>
+                                            <form action="/dictionary/{{ entry.id }}/delete" method="post" class="m-0">
+                                                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock content %}

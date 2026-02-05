@@ -26,6 +26,15 @@ Two tables:
 - Use SSR via TeraView; templates live under `assets/`. :contentReference[oaicite:4]{index=4}
 - Keep JS minimal (search scroll + optional fetch-based +/- updates).
 - Prefer POST actions for +/- and reorder flags.
+- Agents are not allowed to modify which lints are allowed; lint-policy changes must come from the user.
+- The live app routes are `/`, `/inventory`, `/inventory/to-order`, `/inventory/new`, `/dictionary`, and their related POST actions. `/` should redirect to `/inventory`.
+- The navbar should reflect the three user-facing destinations: `Inventory`, `To Order`, and `Dictionary`.
+- Dictionary category labels should use the inventory-form wording: `Manufacturer`, `Type`, `Size`, `Unit`, `Order source`.
+- The dictionary category selector should always include the starter set: `manufacturer`, `item_type`, `size`, `uom`, `order_source`.
+- `order_source` may be a plain string or an HTTP(S) URL. When it is a URL, `{nr}` should be replaced with the product number in both the visible label and the link target on the to-order page.
+- Keep the inventory and to-order pages compact and functional; avoid decorative hero banners, pills, or informational chrome that does not help the user complete a task.
+- Quick-reference entries on the inventory form should actively fill their matching field when clicked.
+- `scripts/appcurl.sh` is the local helper for calling app routes through `http://localhost:5150`.
 
 ## Workflow
 1. Add migrations using SeaORM migration conventions (`mYYYYMMDD_HHMMSS_*.rs`). :contentReference[oaicite:5]{index=5}

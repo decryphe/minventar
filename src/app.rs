@@ -5,18 +5,14 @@ use loco_rs::{
     boot::{create_app, BootResult, StartMode},
     config::Config,
     controller::AppRoutes,
-    db::{self, truncate_table},
     environment::Environment,
     task::Tasks,
     Result,
 };
 use migration::Migrator;
-use std::path::Path;
 
 #[allow(unused_imports)]
-use crate::{
-    controllers, initializers, models::_entities::users, tasks, workers::downloader::DownloadWorker,
-};
+use crate::{controllers, initializers, tasks, workers::downloader::DownloadWorker};
 
 pub struct App;
 #[async_trait]
@@ -61,19 +57,15 @@ impl Hooks for App {
 
     fn routes(_ctx: &AppContext) -> AppRoutes {
         AppRoutes::with_default_routes() // controller routes below
-            .add_route(controllers::item::routes())
+            .add_route(controllers::inventory::routes())
             .add_route(controllers::dictionary::routes())
-            .add_route(controllers::auth::routes())
     }
 
-    async fn seed(ctx: &AppContext, base: &Path) -> Result<()> {
-        db::seed::<users::ActiveModel>(&ctx.db, &base.join("users.yaml").display().to_string())
-            .await?;
+    async fn seed(_ctx: &AppContext, _base: &std::path::Path) -> Result<()> {
         Ok(())
     }
 
-    async fn truncate(ctx: &AppContext) -> Result<()> {
-        truncate_table(&ctx.db, users::Entity).await?;
+    async fn truncate(_ctx: &AppContext) -> Result<()> {
         Ok(())
     }
 }
