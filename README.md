@@ -32,6 +32,8 @@ cargo loco start
 - Run: `cargo loco start`
 - Lint: `cargo clippy`
 - Format: `cargo fmt`
+- Full CI check locally (starts Redis/Postgres via Docker): `./scripts/ci.sh`
+- Update insta snapshots while running CI check: `INSTA_UPDATE=always ./scripts/ci.sh`
 
 ## Getting help
 

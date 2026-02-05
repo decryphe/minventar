@@ -4,24 +4,24 @@ expression: saved_user
 ---
 Ok(
     Model {
-        created_at: DATE,
-        updated_at: DATE,
-        id: ID
-        pid: PID,
-        email: "test@loco.com",
-        password: "PASSWORD",
         api_key: "lo-PID",
-        name: "loco",
-        reset_token: None,
-        reset_sent_at: None,
-        email_verification_token: Some(
-            "PID",
-        ),
+        created_at: DATE,
+        email: "test@loco.com",
         email_verification_sent_at: Some(
             DATE,
         ),
+        email_verification_token: Some(
+            "PID",
+        ),
         email_verified_at: None,
-        magic_link_token: None,
+        id: ID
         magic_link_expiration: None,
+        magic_link_token: None,
+        name: "loco",
+        password: "PASSWORD",
+        pid: PID,
+        reset_sent_at: None,
+        reset_token: None,
+        updated_at: DATE,
     },
 )
