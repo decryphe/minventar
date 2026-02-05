@@ -7,7 +7,7 @@ use loco_rs::prelude::*;
 #[debug_handler]
 pub async fn list(
     ViewEngine(v): ViewEngine<TeraView>,
-    State(_ctx): State<AppContext>
+    State(_ctx): State<AppContext>,
 ) -> Result<Response> {
     format::render().view(&v, "dictionary/list.html", data!({}))
 }
@@ -15,7 +15,7 @@ pub async fn list(
 #[debug_handler]
 pub async fn remove(
     ViewEngine(v): ViewEngine<TeraView>,
-    State(_ctx): State<AppContext>
+    State(_ctx): State<AppContext>,
 ) -> Result<Response> {
     format::render().view(&v, "dictionary/remove.html", data!({}))
 }
@@ -23,7 +23,7 @@ pub async fn remove(
 #[debug_handler]
 pub async fn update(
     ViewEngine(v): ViewEngine<TeraView>,
-    State(_ctx): State<AppContext>
+    State(_ctx): State<AppContext>,
 ) -> Result<Response> {
     format::render().view(&v, "dictionary/update.html", data!({}))
 }

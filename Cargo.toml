@@ -8,6 +8,7 @@ perf = "deny"
 style = "deny"
 pedantic = "deny"
 arbitrary_source_item_ordering = "deny"
+rust-2018-idioms = "deny"
 
 [lints]
 workspace = true

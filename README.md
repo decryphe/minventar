@@ -27,6 +27,12 @@ Minimal SSR inventory tracking app in Rust using Loco + SeaORM + Tera templates 
 cargo loco start
 ```
 
+## Development
+- Build: `cargo build`
+- Run: `cargo loco start`
+- Lint: `cargo clippy`
+- Format: `cargo fmt`
+
 ## Getting help
 
 Check out [a quick tour](https://loco.rs/docs/getting-started/tour/) or [the complete guide](https://loco.rs/docs/getting-started/guide/).
