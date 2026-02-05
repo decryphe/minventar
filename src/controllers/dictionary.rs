@@ -9,7 +9,13 @@ pub async fn list(
     ViewEngine(v): ViewEngine<TeraView>,
     State(_ctx): State<AppContext>,
 ) -> Result<Response> {
-    format::render().view(&v, "dictionary/list.html", data!({}))
+    format::render().view(
+        &v,
+        "dictionary/list.html",
+        data!({
+            "nav_active": "configuration",
+        }),
+    )
 }
 
 #[debug_handler]
@@ -30,8 +36,7 @@ pub async fn update(
 
 pub fn routes() -> Routes {
     Routes::new()
-        .prefix("dictionaries/")
-        .add("list", get(list))
-        .add("remove", get(remove))
-        .add("update", get(update))
+        .add("configuration/dictionaries", get(list))
+        .add("configuration/dictionaries/remove", get(remove))
+        .add("configuration/dictionaries/update", get(update))
 }

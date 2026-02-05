@@ -1,0 +1,26 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Inventory · Minventar{% endblock title %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+        <p class="text-uppercase text-body-secondary small mb-1">Inventory</p>
+        <h1 class="h3 mb-0">Inventory overview</h1>
+        <p class="text-muted mb-0">List every tracked item, adjust stock, and flag orders.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary disabled" type="button" aria-disabled="true">
+            Add inventory item
+        </button>
+        <button class="btn btn-outline-secondary disabled" type="button" aria-disabled="true">
+            Import CSV
+        </button>
+    </div>
+</div>
+<div class="card shadow-sm border-0">
+    <div class="card-body py-5 text-center text-muted">
+        Inventory list UI coming soon. Hook up SeaORM models to populate this table.
+    </div>
+</div>
+{% endblock content %}

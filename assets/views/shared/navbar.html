@@ -1,0 +1,32 @@
+{% set current_nav = nav_active | default(value="") %}
+<nav class="navbar navbar-expand-md bg-white border-bottom shadow-sm">
+    <div class="container-fluid py-2">
+        <a class="navbar-brand fw-semibold text-uppercase text-primary" href="/inventory">
+            Minventar
+        </a>
+        <div class="d-flex flex-column flex-md-row align-items-md-center gap-3 ms-md-auto">
+            <ul class="nav nav-pills gap-1">
+                <li class="nav-item">
+                    <a
+                        class="nav-link {% if current_nav == 'inventory' %}active{% endif %}"
+                        href="/inventory"
+                    >
+                        Inventory
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a
+                        class="nav-link {% if current_nav == 'configuration' %}active{% endif %}"
+                        href="/configuration"
+                    >
+                        Configuration
+                    </a>
+                </li>
+            </ul>
+            <div class="text-muted small text-md-end">
+                <div class="fw-semibold text-body-secondary">Minimal inventory tracker</div>
+                <div class="text-body-tertiary">Bestbefors-style SSR</div>
+            </div>
+        </div>
+    </div>
+</nav>
