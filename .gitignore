@@ -21,3 +21,6 @@ target/
 
 *.sqlite
 *.sqlite-*
+
+# Don't include build outputs.
+dist/

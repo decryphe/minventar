@@ -32,8 +32,15 @@ cargo loco start
 - Run: `cargo loco start`
 - Lint: `cargo clippy`
 - Format: `cargo fmt`
+- Windows cross-compile: `rustup target add x86_64-pc-windows-gnu` and `./scripts/package_windows.sh`
 - Full CI check locally (starts Redis/Postgres via Docker): `./scripts/ci.sh`
 - Update insta snapshots while running CI check: `INSTA_UPDATE=always ./scripts/ci.sh`
+
+## Windows Packaging
+- Prerequisites: `rustup target add x86_64-pc-windows-gnu`, `python3`, `zip`, and `mingw-w64`.
+- Package build: `./scripts/package_windows.sh`
+- Output: `dist/mininventar-<version>-windows-amd64.zip`
+- Included launcher: `scripts/start_server.ps1`, which starts `mininventar-cli.exe` on Windows.
 
 ## Getting help
 
