@@ -1,6 +1,6 @@
 {% extends "layout/base.html" %}
 
-{% block title %}Inventory · Minventar{% endblock title %}
+{% block title %}{{ t(key="nav-inventory", lang=lang) }} · Minventar{% endblock title %}
 
 {% block content %}
 {% set item_count = items | length %}
@@ -13,54 +13,55 @@
 <section class="app-card p-4">
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-4">
         <div>
-            <h2 class="h4 mb-1">Current stock</h2>
-            <p class="app-subtle mb-0">Find items quickly, update stock levels, and keep an eye on what needs reordering.</p>
+            <h2 class="h4 mb-1">{{ t(key="inventory-list-title", lang=lang) }}</h2>
+            <p class="app-subtle mb-0">{{ t(key="inventory-list-subtitle", lang=lang) }}</p>
         </div>
         <div class="d-flex flex-column align-items-stretch gap-3 col-lg-6 px-0">
             <div class="d-flex flex-wrap justify-content-lg-end gap-3">
                 <div class="app-metric px-3 py-2 text-center">
-                    <div class="small text-uppercase app-subtle mb-1">Tracked</div>
+                    <div class="small text-uppercase app-subtle mb-1">{{ t(key="inventory-list-tracked", lang=lang) }}</div>
                     <div class="h5 fw-semibold mb-0">{{ item_count }}</div>
                 </div>
                 <div class="app-metric px-3 py-2 text-center">
-                    <div class="small text-uppercase app-subtle mb-1">Needs Order</div>
+                    <div class="small text-uppercase app-subtle mb-1">{{ t(key="inventory-list-needs-order", lang=lang) }}</div>
                     <div class="h5 fw-semibold mb-0">{{ needs_attention }}</div>
                 </div>
-                <a class="btn btn-primary align-self-center" href="/inventory/new">Add inventory item</a>
+                <a class="btn btn-primary align-self-center" href="/inventory/new">{{ t(key="inventory-form-add-title", lang=lang) }}</a>
             </div>
             <input
                 class="form-control app-search"
                 id="inventory-search"
                 type="search"
-                placeholder="Search by name, barcode, manufacturer, or product number"
+                placeholder="{{ t(key='inventory-list-search-placeholder', lang=lang) }}"
             />
         </div>
     </div>
 
     {% if item_count == 0 %}
         <div class="text-center py-5">
-            <h3 class="h5 mb-2">No inventory yet</h3>
-            <p class="app-subtle mb-4">Create the first tracked item to start using the stock and reorder workflow.</p>
-            <a class="btn btn-primary" href="/inventory/new">Add first item</a>
+            <h3 class="h5 mb-2">{{ t(key="inventory-list-empty-title", lang=lang) }}</h3>
+            <p class="app-subtle mb-4">{{ t(key="inventory-list-empty-body", lang=lang) }}</p>
+            <a class="btn btn-primary" href="/inventory/new">{{ t(key="inventory-list-empty-cta", lang=lang) }}</a>
         </div>
     {% else %}
         <div class="small app-subtle mb-3" id="inventory-search-status">
-            Showing all {{ item_count }} items.
+            {{ t(key="inventory-search-showing-all", lang=lang) }} {{ item_count }} {{ t(key="inventory-search-items", lang=lang) }}
         </div>
         <div class="alert alert-warning d-none" id="inventory-search-empty" role="alert">
-            No inventory items match this search.
+            {{ t(key="inventory-search-empty", lang=lang) }}
         </div>
         <div class="table-responsive">
             <table class="table app-table align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>Item</th>
-                        <th>Manufacturer</th>
-                        <th>Barcode</th>
-                        <th>Product #</th>
-                        <th>Stock</th>
-                        <th>Reorder</th>
-                        <th class="text-end">Actions</th>
+                        <th>{{ t(key="inventory-table-item", lang=lang) }}</th>
+                        <th>{{ t(key="field-manufacturer", lang=lang) }}</th>
+                        <th>{{ t(key="field-barcode", lang=lang) }}</th>
+                        <th>{{ t(key="field-product-number", lang=lang) }}</th>
+                        <th>{{ t(key="field-order-source", lang=lang) }}</th>
+                        <th>{{ t(key="inventory-table-stock", lang=lang) }}</th>
+                        <th>{{ t(key="inventory-table-reorder", lang=lang) }}</th>
+                        <th class="text-end">{{ t(key="common-actions", lang=lang) }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -73,7 +74,7 @@
                             <td>
                                 <div class="fw-semibold">{{ item.name }}</div>
                                 <div class="small app-subtle">
-                                    {% if item.item_type %}{{ item.item_type }}{% else %}Uncategorized item{% endif %}
+                                    {% if item.item_type %}{{ item.item_type }}{% else %}{{ t(key="inventory-list-uncategorized", lang=lang) }}{% endif %}
                                 </div>
                             </td>
                             <td>
@@ -86,6 +87,32 @@
                                 {{ item.product_number | default(value='-') }}
                             </td>
                             <td>
+                                {% if item.order_source %}
+                                    {% if item.order_source_href %}
+                                        <a
+                                            aria-label="{{ t(key='to-order-open-order-source', lang=lang) }}"
+                                            class="btn btn-sm btn-outline-secondary"
+                                            href="{{ item.order_source_href }}"
+                                            rel="noopener noreferrer"
+                                            target="_blank"
+                                            title="{{ item.order_source_label }}"
+                                        >
+                                            <svg aria-hidden="true" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14">
+                                                <path d="M14 3h7v7"></path>
+                                                <path d="M10 14 21 3"></path>
+                                                <path d="M21 14v7h-7"></path>
+                                                <path d="M3 10V3h7"></path>
+                                                <path d="m3 3 7 7"></path>
+                                            </svg>
+                                        </a>
+                                    {% else %}
+                                        {{ item.order_source_label }}
+                                    {% endif %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
                                 <div class="d-flex align-items-center gap-2 flex-wrap">
                                     <form action="/inventory/{{ item.id }}/adjust" method="post" class="m-0">
                                         <input type="hidden" name="delta" value="-1" />
@@ -94,7 +121,7 @@
                                     <div class="text-center px-2">
                                         <div class="fw-semibold">{{ item.stock_qty }} {% if item.uom %}{{ item.uom }}{% endif %}</div>
                                         <div class="small {% if low_stock %}text-danger{% else %}app-subtle{% endif %}">
-                                            Min {{ item.min_stock_qty }}
+                                            {{ t(key="inventory-list-min", lang=lang) }} {{ item.min_stock_qty }}
                                         </div>
                                     </div>
                                     <form action="/inventory/{{ item.id }}/adjust" method="post" class="m-0">
@@ -105,23 +132,23 @@
                             </td>
                             <td>
                                 {% if low_stock %}
-                                    <span class="badge text-bg-warning">Below minimum</span>
+                                    <span class="badge text-bg-warning">{{ t(key="inventory-list-below-minimum", lang=lang) }}</span>
                                     {% if item.ordered %}
-                                        <div class="small text-success mt-1">Already marked as ordered</div>
+                                        <div class="small text-success mt-1">{{ t(key="inventory-list-already-ordered", lang=lang) }}</div>
                                     {% endif %}
                                 {% else %}
-                                    <span class="badge text-bg-light">Healthy</span>
+                                    <span class="badge text-bg-light">{{ t(key="inventory-list-healthy", lang=lang) }}</span>
                                 {% endif %}
                             </td>
                             <td class="text-end">
                                 <div class="d-flex justify-content-end gap-2 flex-wrap">
-                                    <a class="btn btn-sm btn-outline-primary" href="/inventory/{{ item.id }}/edit">Edit</a>
+                                    <a class="btn btn-sm btn-outline-primary" href="/inventory/{{ item.id }}/edit">{{ t(key="common-edit", lang=lang) }}</a>
                                     <form action="/inventory/{{ item.id }}/ordered" method="post" class="m-0">
                                         {% if not item.ordered %}
                                             <input type="hidden" name="ordered" value="true" />
                                         {% endif %}
                                         <button class="btn btn-sm {% if item.ordered %}btn-outline-success{% else %}btn-outline-warning{% endif %}" type="submit">
-                                            {% if item.ordered %}Ordered{% else %}Mark ordered{% endif %}
+                                            {% if item.ordered %}{{ t(key="inventory-list-ordered", lang=lang) }}{% else %}{{ t(key="inventory-list-mark-ordered", lang=lang) }}{% endif %}
                                         </button>
                                     </form>
                                 </div>
@@ -140,6 +167,12 @@
     const searchInput = document.getElementById("inventory-search");
     const searchStatus = document.getElementById("inventory-search-status");
     const searchEmpty = document.getElementById("inventory-search-empty");
+    const inventorySearchShowingAll = "{{ t(key='inventory-search-showing-all', lang=lang) }}";
+    const inventorySearchItems = "{{ t(key='inventory-search-items', lang=lang) }}";
+    const inventorySearchShowing = "{{ t(key='inventory-search-showing', lang=lang) }}";
+    const inventorySearchMatchingSingular = "{{ t(key='inventory-search-matching-singular', lang=lang) }}";
+    const inventorySearchMatchingPlural = "{{ t(key='inventory-search-matching-plural', lang=lang) }}";
+    const inventorySearchFor = "{{ t(key='inventory-search-for', lang=lang) }}";
     if (searchInput) {
         const rows = Array.from(document.querySelectorAll("tr[data-search]"));
 
@@ -167,9 +200,12 @@
 
             if (searchStatus) {
                 if (!query) {
-                    searchStatus.textContent = `Showing all ${rows.length} items.`;
+                    searchStatus.textContent = `${inventorySearchShowingAll} ${rows.length} ${inventorySearchItems}`;
                 } else {
-                    searchStatus.textContent = `Showing ${visibleCount} matching item${visibleCount === 1 ? "" : "s"} for "${searchInput.value.trim()}".`;
+                    const matchingLabel = visibleCount === 1
+                        ? inventorySearchMatchingSingular
+                        : inventorySearchMatchingPlural;
+                    searchStatus.textContent = `${inventorySearchShowing} ${visibleCount} ${matchingLabel} ${inventorySearchFor} "${searchInput.value.trim()}".`;
                 }
             }
 

@@ -105,6 +105,70 @@
             top: 1rem;
         }
 
+        .app-locale-menu {
+            position: relative;
+        }
+
+        .app-locale-toggle {
+            align-items: center;
+            background: #fff;
+            border: 1px solid var(--app-line);
+            border-radius: 999px;
+            cursor: pointer;
+            display: inline-flex;
+            gap: 0.5rem;
+            list-style: none;
+            padding: 0.35rem 0.75rem;
+        }
+
+        .app-locale-toggle::-webkit-details-marker {
+            display: none;
+        }
+
+        .app-locale-flag {
+            border-radius: 999px;
+            display: block;
+            height: 1rem;
+            object-fit: cover;
+            width: 1.5rem;
+        }
+
+        .app-locale-panel {
+            background: #fff;
+            border: 1px solid var(--app-line);
+            border-radius: 0.9rem;
+            box-shadow: var(--app-shadow);
+            min-width: 10rem;
+            padding: 0.35rem;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 0.4rem);
+            z-index: 20;
+        }
+
+        .app-locale-option {
+            align-items: center;
+            background: transparent;
+            border: 0;
+            border-radius: 0.7rem;
+            display: flex;
+            gap: 0.65rem;
+            padding: 0.45rem 0.6rem;
+            text-align: left;
+            width: 100%;
+        }
+
+        .app-locale-option:hover,
+        .app-locale-option:focus-visible {
+            background: var(--app-accent-soft);
+            outline: none;
+        }
+
+        .app-locale-option[aria-current="true"] {
+            background: rgba(20, 33, 61, 0.06);
+            font-weight: 600;
+        }
+
         @media (max-width: 991.98px) {
             .app-form-panel {
                 position: static;

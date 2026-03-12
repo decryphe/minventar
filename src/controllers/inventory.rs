@@ -2,11 +2,13 @@
 #![allow(clippy::unnecessary_struct_initialization)]
 #![allow(clippy::unused_async)]
 
+use axum::http::HeaderMap;
 use axum::response::Redirect;
 use axum_extra::extract::Form;
 use loco_rs::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::i18n::{locale_from_headers, SUPPORTED_LOCALES};
 use crate::models::{
     dictionary_entries,
     inventory_items::{InventoryItemParams, Model as InventoryItemModel},
@@ -57,10 +59,11 @@ impl InventorySaveForm {
 }
 
 #[derive(Debug, Serialize)]
-pub struct ToOrderItemView {
+pub struct InventoryItemView {
     pub id: i32,
     pub item_type: Option<String>,
     pub manufacturer: Option<String>,
+    pub min_stock_qty: i32,
     pub name: String,
     pub order_source: Option<String>,
     pub order_source_href: Option<String>,
@@ -68,8 +71,10 @@ pub struct ToOrderItemView {
     pub ordered: bool,
     pub product_number: Option<String>,
     pub stock_qty: i32,
-    pub min_stock_qty: i32,
+    pub uom: Option<String>,
 }
+
+type ToOrderItemView = InventoryItemView;
 
 #[debug_handler]
 pub async fn index() -> Result<Response> {
@@ -89,19 +94,24 @@ pub async fn adjust_stock(
 #[debug_handler]
 pub async fn edit(
     Path(id): Path<i32>,
+    headers: HeaderMap,
     ViewEngine(v): ViewEngine<TeraView>,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
     let dictionary_groups = dictionary_entries::Model::list_grouped(&ctx.db).await?;
     let item = InventoryItemModel::find_by_id(&ctx.db, id).await?;
+    let lang = locale_from_headers(&headers);
 
     format::render().view(
         &v,
         "inventory/form.html",
         data!({
+            "available_locales": SUPPORTED_LOCALES,
+            "current_path": format!("/inventory/{id}/edit"),
             "dictionary_groups": dictionary_groups,
             "inventory_item": item,
             "is_edit": true,
+            "lang": lang,
             "nav_active": "inventory",
         }),
     )
@@ -109,16 +119,44 @@ pub async fn edit(
 
 #[debug_handler]
 pub async fn list(
+    headers: HeaderMap,
     ViewEngine(v): ViewEngine<TeraView>,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
-    let items = InventoryItemModel::list_all(&ctx.db).await?;
+    let items = InventoryItemModel::list_all(&ctx.db)
+        .await?
+        .into_iter()
+        .map(|item| InventoryItemView {
+            id: item.id,
+            item_type: item.item_type,
+            manufacturer: item.manufacturer,
+            min_stock_qty: item.min_stock_qty,
+            name: item.name,
+            order_source_label: substitute_product_number(
+                item.order_source.as_deref(),
+                item.product_number.as_deref(),
+            ),
+            order_source_href: build_order_source_href(
+                item.order_source.as_deref(),
+                item.product_number.as_deref(),
+            ),
+            order_source: item.order_source,
+            ordered: item.ordered,
+            product_number: item.product_number,
+            stock_qty: item.stock_qty,
+            uom: item.uom,
+        })
+        .collect::<Vec<_>>();
+    let lang = locale_from_headers(&headers);
 
     format::render().view(
         &v,
         "inventory/list.html",
         data!({
+            "available_locales": SUPPORTED_LOCALES,
+            "current_path": "/inventory",
             "items": items,
+            "lang": lang,
             "nav_active": "inventory",
         }),
     )
@@ -126,18 +164,23 @@ pub async fn list(
 
 #[debug_handler]
 pub async fn new(
+    headers: HeaderMap,
     ViewEngine(v): ViewEngine<TeraView>,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
     let dictionary_groups = dictionary_entries::Model::list_grouped(&ctx.db).await?;
+    let lang = locale_from_headers(&headers);
 
     format::render().view(
         &v,
         "inventory/form.html",
         data!({
+            "available_locales": SUPPORTED_LOCALES,
+            "current_path": "/inventory/new",
             "dictionary_groups": dictionary_groups,
             "inventory_item": serde_json::Value::Null,
             "is_edit": false,
+            "lang": lang,
             "nav_active": "inventory",
         }),
     )
@@ -173,9 +216,11 @@ pub async fn set_ordered(
 
 #[debug_handler]
 pub async fn to_order(
+    headers: HeaderMap,
     ViewEngine(v): ViewEngine<TeraView>,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
+    let lang = locale_from_headers(&headers);
     let items = InventoryItemModel::list_to_order(&ctx.db)
         .await?
         .into_iter()
@@ -183,6 +228,7 @@ pub async fn to_order(
             id: item.id,
             item_type: item.item_type,
             manufacturer: item.manufacturer,
+            min_stock_qty: item.min_stock_qty,
             name: item.name,
             order_source_label: substitute_product_number(
                 item.order_source.as_deref(),
@@ -196,7 +242,7 @@ pub async fn to_order(
             ordered: item.ordered,
             product_number: item.product_number,
             stock_qty: item.stock_qty,
-            min_stock_qty: item.min_stock_qty,
+            uom: item.uom,
         })
         .collect::<Vec<_>>();
 
@@ -204,13 +250,19 @@ pub async fn to_order(
         &v,
         "inventory/to_order.html",
         data!({
+            "available_locales": SUPPORTED_LOCALES,
+            "current_path": "/inventory/to-order",
             "items": items,
+            "lang": lang,
             "nav_active": "to-order",
         }),
     )
 }
 
-fn build_order_source_href(order_source: Option<&str>, product_number: Option<&str>) -> Option<String> {
+fn build_order_source_href(
+    order_source: Option<&str>,
+    product_number: Option<&str>,
+) -> Option<String> {
     let source = order_source?;
     if source.starts_with("http://") || source.starts_with("https://") {
         substitute_product_number(Some(source), product_number)

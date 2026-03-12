@@ -59,6 +59,7 @@ impl Hooks for App {
         AppRoutes::with_default_routes() // controller routes below
             .add_route(controllers::inventory::routes())
             .add_route(controllers::dictionary::routes())
+            .add_route(controllers::language::routes())
     }
 
     async fn seed(_ctx: &AppContext, _base: &std::path::Path) -> Result<()> {

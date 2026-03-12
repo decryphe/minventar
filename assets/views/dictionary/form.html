@@ -1,6 +1,6 @@
 {% extends "layout/base.html" %}
 
-{% block title %}Dictionary · Minventar{% endblock title %}
+{% block title %}{{ t(key="nav-dictionary", lang=lang) }} · Minventar{% endblock title %}
 
 {% block content %}
 <div class="row g-4">
@@ -8,11 +8,11 @@
         <section class="app-card p-4 p-lg-5 app-form-panel">
             <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
                 <div>
-                    <h1 class="h3 mb-2">{% if is_edit %}Edit entry{% else %}Add dictionary entry{% endif %}</h1>
-                    <p class="app-subtle mb-0">Keep reusable values grouped by category so the inventory form can autocomplete common fields.</p>
+                    <h1 class="h3 mb-2">{% if is_edit %}{{ t(key="dictionary-edit-title", lang=lang) }}{% else %}{{ t(key="dictionary-add-title", lang=lang) }}{% endif %}</h1>
+                    <p class="app-subtle mb-0">{{ t(key="dictionary-form-subtitle", lang=lang) }}</p>
                 </div>
                 {% if is_edit %}
-                    <a class="btn btn-outline-secondary" href="/dictionary">New entry</a>
+                    <a class="btn btn-outline-secondary" href="/dictionary">{{ t(key="dictionary-new-entry", lang=lang) }}</a>
                 {% endif %}
             </div>
 
@@ -21,14 +21,14 @@
                     <input type="hidden" name="id" value="{{ current_entry.id }}" />
                 {% endif %}
                 <div class="col-12">
-                    <label class="form-label fw-semibold" for="category">Category</label>
+                    <label class="form-label fw-semibold" for="category">{{ t(key="dictionary-category", lang=lang) }}</label>
                     <select class="form-select" id="category" name="category" required>
-                        <option value="">Choose a category</option>
-                        <option value="manufacturer" {% if current_entry.category | default(value='') == "manufacturer" %}selected{% endif %}>Manufacturer</option>
-                        <option value="item_type" {% if current_entry.category | default(value='') == "item_type" %}selected{% endif %}>Type</option>
-                        <option value="size" {% if current_entry.category | default(value='') == "size" %}selected{% endif %}>Size</option>
-                        <option value="uom" {% if current_entry.category | default(value='') == "uom" %}selected{% endif %}>Unit</option>
-                        <option value="order_source" {% if current_entry.category | default(value='') == "order_source" %}selected{% endif %}>Order source</option>
+                        <option value="">{{ t(key="dictionary-choose-category", lang=lang) }}</option>
+                        <option value="manufacturer" {% if current_entry.category | default(value='') == "manufacturer" %}selected{% endif %}>{{ t(key="field-manufacturer", lang=lang) }}</option>
+                        <option value="item_type" {% if current_entry.category | default(value='') == "item_type" %}selected{% endif %}>{{ t(key="field-type", lang=lang) }}</option>
+                        <option value="size" {% if current_entry.category | default(value='') == "size" %}selected{% endif %}>{{ t(key="field-size", lang=lang) }}</option>
+                        <option value="uom" {% if current_entry.category | default(value='') == "uom" %}selected{% endif %}>{{ t(key="field-unit", lang=lang) }}</option>
+                        <option value="order_source" {% if current_entry.category | default(value='') == "order_source" %}selected{% endif %}>{{ t(key="field-order-source", lang=lang) }}</option>
                         {% for group in entry_groups %}
                             {% if group.category != "manufacturer" and group.category != "item_type" and group.category != "size" and group.category != "uom" and group.category != "order_source" %}
                                 <option value="{{ group.category }}" {% if current_entry.category | default(value='') == group.category %}selected{% endif %}>
@@ -39,12 +39,12 @@
                     </select>
                 </div>
                 <div class="col-12">
-                    <label class="form-label fw-semibold" for="value">Value</label>
+                    <label class="form-label fw-semibold" for="value">{{ t(key="dictionary-value", lang=lang) }}</label>
                     <input class="form-control" id="value" name="value" value="{{ current_entry.value | default(value='') }}" required />
                 </div>
                 <div class="col-12 d-flex gap-2 pt-2">
-                    <button class="btn btn-primary" type="submit">{% if is_edit %}Save entry{% else %}Add entry{% endif %}</button>
-                    <a class="btn btn-outline-secondary" href="/inventory/new">Use in inventory form</a>
+                    <button class="btn btn-primary" type="submit">{% if is_edit %}{{ t(key="dictionary-save-entry", lang=lang) }}{% else %}{{ t(key="dictionary-add-entry", lang=lang) }}{% endif %}</button>
+                    <a class="btn btn-outline-secondary" href="/inventory/new">{{ t(key="dictionary-use-in-form", lang=lang) }}</a>
                 </div>
             </form>
         </section>
@@ -54,8 +54,8 @@
         <section class="app-card p-4 p-lg-5">
             <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
                 <div>
-                    <h2 class="h4 mb-1">Current entries</h2>
-                    <p class="app-subtle mb-0">Categories stay flat and intentionally simple.</p>
+                    <h2 class="h4 mb-1">{{ t(key="dictionary-current-entries", lang=lang) }}</h2>
+                    <p class="app-subtle mb-0">{{ t(key="dictionary-current-subtitle", lang=lang) }}</p>
                 </div>
                 <div class="display-6 fw-semibold">
                     {% set count = 0 %}
@@ -69,8 +69,8 @@
 
             {% if entry_groups | length == 0 %}
                 <div class="text-center py-5">
-                    <h3 class="h5 mb-2">No dictionary entries yet</h3>
-                    <p class="app-subtle mb-0">Create a few shared values to speed up inventory edits.</p>
+                    <h3 class="h5 mb-2">{{ t(key="dictionary-empty-title", lang=lang) }}</h3>
+                    <p class="app-subtle mb-0">{{ t(key="dictionary-empty-body", lang=lang) }}</p>
                 </div>
             {% else %}
                 <div class="app-stack">
@@ -80,20 +80,20 @@
                                 <div>
                                     <h3 class="h6 mb-1">
                                         {% if group.category == "manufacturer" %}
-                                            Manufacturer
+                                            {{ t(key="field-manufacturer", lang=lang) }}
                                         {% elif group.category == "item_type" %}
-                                            Type
+                                            {{ t(key="field-type", lang=lang) }}
                                         {% elif group.category == "size" %}
-                                            Size
+                                            {{ t(key="field-size", lang=lang) }}
                                         {% elif group.category == "uom" %}
-                                            Unit
+                                            {{ t(key="field-unit", lang=lang) }}
                                         {% elif group.category == "order_source" %}
-                                            Order source
+                                            {{ t(key="field-order-source", lang=lang) }}
                                         {% else %}
                                             {{ group.category }}
                                         {% endif %}
                                     </h3>
-                                    <div class="small app-subtle">{{ group.entries | length }} entries</div>
+                                    <div class="small app-subtle">{{ group.entries | length }} {{ t(key="dictionary-entries-label", lang=lang) }}</div>
                                 </div>
                             </div>
                             <div class="d-flex flex-column gap-2">
@@ -101,9 +101,9 @@
                                     <div class="border rounded-3 px-3 py-2 d-flex justify-content-between align-items-center gap-3">
                                         <div class="fw-semibold">{{ entry.value }}</div>
                                         <div class="d-flex gap-2">
-                                            <a class="btn btn-sm btn-outline-primary" href="/dictionary/{{ entry.id }}/edit">Edit</a>
+                                            <a class="btn btn-sm btn-outline-primary" href="/dictionary/{{ entry.id }}/edit">{{ t(key="common-edit", lang=lang) }}</a>
                                             <form action="/dictionary/{{ entry.id }}/delete" method="post" class="m-0">
-                                                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                                <button class="btn btn-sm btn-outline-danger" type="submit">{{ t(key="common-delete", lang=lang) }}</button>
                                             </form>
                                         </div>
                                     </div>

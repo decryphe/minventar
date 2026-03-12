@@ -1,4 +1,14 @@
 {% set current_nav = nav_active | default(value="") %}
+{% set current_flag = "/static/gb.svg" %}
+{% if lang == "de-DE" %}
+    {% set current_flag = "/static/de.svg" %}
+{% elif lang == "es-ES" %}
+    {% set current_flag = "/static/es.svg" %}
+{% elif lang == "fr-FR" %}
+    {% set current_flag = "/static/fr.svg" %}
+{% elif lang == "sv-SE" %}
+    {% set current_flag = "/static/se.svg" %}
+{% endif %}
 <nav class="navbar navbar-expand-md bg-white border-bottom shadow-sm">
     <div class="container-fluid py-2">
         <a class="navbar-brand fw-semibold text-uppercase text-primary" href="/inventory">
@@ -11,7 +21,7 @@
                         class="nav-link {% if current_nav == 'inventory' %}active{% endif %}"
                         href="/inventory"
                     >
-                        Inventory
+                        {{ t(key="nav-inventory", lang=lang) }}
                     </a>
                 </li>
                 <li class="nav-item">
@@ -19,7 +29,7 @@
                         class="nav-link {% if current_nav == 'to-order' %}active{% endif %}"
                         href="/inventory/to-order"
                     >
-                        To Order
+                        {{ t(key="nav-to-order", lang=lang) }}
                     </a>
                 </li>
                 <li class="nav-item">
@@ -27,10 +37,43 @@
                         class="nav-link {% if current_nav == 'dictionary' %}active{% endif %}"
                         href="/dictionary"
                     >
-                        Dictionary
+                        {{ t(key="nav-dictionary", lang=lang) }}
                     </a>
                 </li>
             </ul>
+            <details class="app-locale-menu ms-md-2">
+                <summary class="app-locale-toggle">
+                    <img
+                        alt=""
+                        class="app-locale-flag"
+                        height="16"
+                        src="{{ current_flag }}"
+                        width="24"
+                    />
+                </summary>
+                <div class="app-locale-panel">
+                    {% for locale in available_locales | default(value=["de-DE", "en-US", "es-ES", "fr-FR", "sv-SE"]) %}
+                        <form action="/language" class="m-0" method="post">
+                            <input name="return_to" type="hidden" value="{{ current_path | default(value='/inventory') }}" />
+                            <input name="lang" type="hidden" value="{{ locale }}" />
+                            <button
+                                class="app-locale-option"
+                                {% if locale == lang %}aria-current="true"{% endif %}
+                                type="submit"
+                            >
+                                <img
+                                    alt=""
+                                    class="app-locale-flag"
+                                    height="16"
+                                    src="{% if locale == 'de-DE' %}/static/de.svg{% elif locale == 'es-ES' %}/static/es.svg{% elif locale == 'fr-FR' %}/static/fr.svg{% elif locale == 'sv-SE' %}/static/se.svg{% else %}/static/gb.svg{% endif %}"
+                                    width="24"
+                                />
+                                <span>{% if locale == "de-DE" %}Deutsch{% elif locale == "es-ES" %}Espanol{% elif locale == "fr-FR" %}Francais{% elif locale == "sv-SE" %}Svenska{% else %}English{% endif %}</span>
+                            </button>
+                        </form>
+                    {% endfor %}
+                </div>
+            </details>
         </div>
     </div>
 </nav>

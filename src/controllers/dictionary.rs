@@ -2,11 +2,13 @@
 #![allow(clippy::unnecessary_struct_initialization)]
 #![allow(clippy::unused_async)]
 
+use axum::http::HeaderMap;
 use axum::response::Redirect;
 use axum_extra::extract::Form;
 use loco_rs::prelude::*;
 use serde::Deserialize;
 
+use crate::i18n::{locale_from_headers, SUPPORTED_LOCALES};
 use crate::models::dictionary_entries::{DictionaryEntryParams, Model as DictionaryEntryModel};
 
 #[derive(Debug, Deserialize)]
@@ -41,19 +43,24 @@ pub async fn delete(
 #[debug_handler]
 pub async fn edit(
     Path(id): Path<i32>,
+    headers: HeaderMap,
     ViewEngine(v): ViewEngine<TeraView>,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
     let current_entry = DictionaryEntryModel::find_by_id(&ctx.db, id).await?;
     let entry_groups = DictionaryEntryModel::list_grouped(&ctx.db).await?;
+    let lang = locale_from_headers(&headers);
 
     format::render().view(
         &v,
         "dictionary/form.html",
         data!({
+            "available_locales": SUPPORTED_LOCALES,
             "current_entry": current_entry,
+            "current_path": format!("/dictionary/{id}/edit"),
             "entry_groups": entry_groups,
             "is_edit": true,
+            "lang": lang,
             "nav_active": "dictionary",
         }),
     )
@@ -61,18 +68,23 @@ pub async fn edit(
 
 #[debug_handler]
 pub async fn index(
+    headers: HeaderMap,
     ViewEngine(v): ViewEngine<TeraView>,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
     let entry_groups = DictionaryEntryModel::list_grouped(&ctx.db).await?;
+    let lang = locale_from_headers(&headers);
 
     format::render().view(
         &v,
         "dictionary/form.html",
         data!({
+            "available_locales": SUPPORTED_LOCALES,
             "current_entry": serde_json::Value::Null,
+            "current_path": "/dictionary",
             "entry_groups": entry_groups,
             "is_edit": false,
+            "lang": lang,
             "nav_active": "dictionary",
         }),
     )

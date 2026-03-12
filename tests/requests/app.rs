@@ -19,6 +19,7 @@ async fn ssr_pages_render() {
     let inventory = request.get("/inventory").await;
     assert_eq!(inventory.status_code(), 200);
     assert!(inventory.text().contains("Current stock"));
+    assert!(inventory.text().contains("Inventory"));
 
     let inventory_form = request.get("/inventory/new").await;
     assert_eq!(inventory_form.status_code(), 200);
@@ -31,6 +32,76 @@ async fn ssr_pages_render() {
     let dictionary = request.get("/dictionary").await;
     assert_eq!(dictionary.status_code(), 200);
     assert!(dictionary.text().contains("Add dictionary entry"));
+}
+
+#[tokio::test]
+#[serial]
+async fn language_defaults_to_english_and_can_be_changed_with_cookie() {
+    let (request, _ctx) = test_server().await;
+
+    let default_response = request.get("/inventory").await;
+    assert_eq!(default_response.status_code(), 200);
+    assert!(default_response.text().contains("Inventory"));
+
+    let set_language_response = request
+        .post("/language")
+        .text("lang=de-DE&return_to=%2Finventory")
+        .content_type(FORM_URLENCODED)
+        .await;
+
+    assert_eq!(set_language_response.status_code(), 303);
+    assert_eq!(
+        set_language_response.headers().get("location").unwrap(),
+        "/inventory"
+    );
+    let locale_cookie = set_language_response
+        .headers()
+        .get("set-cookie")
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string();
+    assert!(locale_cookie.contains("minventar_locale=de-DE"));
+
+    let localized_response = request
+        .get("/inventory")
+        .add_header("cookie", &locale_cookie)
+        .await;
+
+    assert_eq!(localized_response.status_code(), 200);
+    assert!(localized_response.text().contains("Inventar"));
+    assert!(localized_response.text().contains("/static/de.svg"));
+}
+
+#[tokio::test]
+#[serial]
+async fn supports_additional_locales_via_cookie() {
+    let (request, _ctx) = test_server().await;
+
+    let response = request
+        .post("/language")
+        .text("lang=fr-FR&return_to=%2Finventory")
+        .content_type(FORM_URLENCODED)
+        .await;
+
+    assert_eq!(response.status_code(), 303);
+    let locale_cookie = response
+        .headers()
+        .get("set-cookie")
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string();
+    assert!(locale_cookie.contains("minventar_locale=fr-FR"));
+
+    let localized_response = request
+        .get("/inventory")
+        .add_header("cookie", &locale_cookie)
+        .await;
+
+    assert_eq!(localized_response.status_code(), 200);
+    assert!(localized_response.text().contains("Inventaire"));
+    assert!(localized_response.text().contains("/static/fr.svg"));
 }
 
 #[tokio::test]

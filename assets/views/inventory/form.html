@@ -1,6 +1,6 @@
 {% extends "layout/base.html" %}
 
-{% block title %}Inventory Item · Minventar{% endblock title %}
+{% block title %}{% if is_edit %}{{ t(key="inventory-form-edit-title", lang=lang) }}{% else %}{{ t(key="inventory-form-add-title", lang=lang) }}{% endif %} · Minventar{% endblock title %}
 
 {% block content %}
 <div class="row g-4">
@@ -8,10 +8,10 @@
         <section class="app-card p-4 p-lg-5">
             <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
                 <div>
-                    <h1 class="h3 mb-2">{% if is_edit %}Update inventory item{% else %}Add inventory item{% endif %}</h1>
-                    <p class="app-subtle mb-0">Fields stay simple and server-rendered. Dictionary suggestions are shown alongside the form.</p>
+                    <h1 class="h3 mb-2">{% if is_edit %}{{ t(key="inventory-form-edit-title", lang=lang) }}{% else %}{{ t(key="inventory-form-add-title", lang=lang) }}{% endif %}</h1>
+                    <p class="app-subtle mb-0">{{ t(key="inventory-form-subtitle", lang=lang) }}</p>
                 </div>
-                <a class="btn btn-outline-secondary" href="/inventory">Back to inventory</a>
+                <a class="btn btn-outline-secondary" href="/inventory">{{ t(key="common-back-to-inventory", lang=lang) }}</a>
             </div>
 
             <form action="/inventory/save" method="post" class="row g-3">
@@ -20,55 +20,59 @@
                 {% endif %}
 
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold" for="name">Name</label>
+                    <label class="form-label fw-semibold" for="name">{{ t(key="field-name", lang=lang) }}</label>
                     <input class="form-control" id="name" name="name" value="{{ inventory_item.name | default(value='') }}" required />
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold" for="barcode">Barcode / ID</label>
+                    <label class="form-label fw-semibold" for="barcode">{{ t(key="field-barcode", lang=lang) }}</label>
                     <input class="form-control" id="barcode" name="barcode" value="{{ inventory_item.barcode | default(value='') }}" />
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold" for="manufacturer">Manufacturer</label>
+                    <label class="form-label fw-semibold" for="manufacturer">{{ t(key="field-manufacturer", lang=lang) }}</label>
                     <input class="form-control" id="manufacturer" list="manufacturer-options" name="manufacturer" value="{{ inventory_item.manufacturer | default(value='') }}" />
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold" for="item_type">Type</label>
+                    <label class="form-label fw-semibold" for="item_type">{{ t(key="field-type", lang=lang) }}</label>
                     <input class="form-control" id="item_type" list="item-type-options" name="item_type" value="{{ inventory_item.item_type | default(value='') }}" />
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold" for="size">Size</label>
+                    <label class="form-label fw-semibold" for="size">{{ t(key="field-size", lang=lang) }}</label>
                     <input class="form-control" id="size" list="size-options" name="size" value="{{ inventory_item.size | default(value='') }}" />
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold" for="uom">Unit</label>
+                    <label class="form-label fw-semibold" for="uom">{{ t(key="field-unit", lang=lang) }}</label>
                     <input class="form-control" id="uom" list="uom-options" name="uom" value="{{ inventory_item.uom | default(value='') }}" />
                 </div>
                 <div class="col-md-8">
-                    <label class="form-label fw-semibold" for="order_source">Order source</label>
+                    <label class="form-label fw-semibold" for="order_source">{{ t(key="field-order-source", lang=lang) }}</label>
                     <input class="form-control" id="order_source" list="order-source-options" name="order_source" value="{{ inventory_item.order_source | default(value='') }}" />
-                    <div class="form-text">If this is a link, you can include <code>{nr}</code> and it will be replaced with the product number on the to-order page.</div>
+                    <div class="form-text">
+                        {{ t(key="inventory-form-order-source-help-before", lang=lang) }}
+                        <code>{nr}</code>
+                        {{ t(key="inventory-form-order-source-help-after", lang=lang) }}
+                    </div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label fw-semibold" for="product_number">Product number</label>
+                    <label class="form-label fw-semibold" for="product_number">{{ t(key="field-product-number", lang=lang) }}</label>
                     <input class="form-control" id="product_number" name="product_number" value="{{ inventory_item.product_number | default(value='') }}" />
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold" for="stock_qty">Current stock</label>
+                    <label class="form-label fw-semibold" for="stock_qty">{{ t(key="inventory-list-title", lang=lang) }}</label>
                     <input class="form-control" id="stock_qty" min="0" name="stock_qty" type="number" value="{{ inventory_item.stock_qty | default(value=0) }}" required />
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold" for="min_stock_qty">Minimum stock</label>
+                    <label class="form-label fw-semibold" for="min_stock_qty">{{ t(key="field-minimum-stock", lang=lang) }}</label>
                     <input class="form-control" id="min_stock_qty" min="0" name="min_stock_qty" type="number" value="{{ inventory_item.min_stock_qty | default(value=0) }}" required />
                 </div>
                 <div class="col-12">
                     <div class="form-check form-switch">
                         <input class="form-check-input" id="ordered" name="ordered" type="checkbox" value="true" {% if inventory_item.ordered | default(value=false) %}checked{% endif %} />
-                        <label class="form-check-label" for="ordered">Already ordered</label>
+                        <label class="form-check-label" for="ordered">{{ t(key="inventory-form-already-ordered", lang=lang) }}</label>
                     </div>
                 </div>
                 <div class="col-12 d-flex gap-2 pt-2">
-                    <button class="btn btn-primary" type="submit">{% if is_edit %}Save changes{% else %}Create item{% endif %}</button>
-                    <a class="btn btn-outline-secondary" href="/inventory">Cancel</a>
+                    <button class="btn btn-primary" type="submit">{% if is_edit %}{{ t(key="common-save-changes", lang=lang) }}{% else %}{{ t(key="inventory-form-create", lang=lang) }}{% endif %}</button>
+                    <a class="btn btn-outline-secondary" href="/inventory">{{ t(key="common-cancel", lang=lang) }}</a>
                 </div>
             </form>
         </section>
@@ -77,20 +81,20 @@
     <div class="col-lg-4">
         <div class="app-stack app-form-panel">
             <section class="app-card p-4">
-                <h2 class="h6 text-uppercase app-subtle mb-3">Quick reference</h2>
+                <h2 class="h6 text-uppercase app-subtle mb-3">{{ t(key="inventory-form-quick-reference", lang=lang) }}</h2>
                 {% for group in dictionary_groups %}
                     <div class="mb-3">
                         <div class="fw-semibold mb-2">
                             {% if group.category == "manufacturer" %}
-                                Manufacturer
+                                {{ t(key="field-manufacturer", lang=lang) }}
                             {% elif group.category == "item_type" %}
-                                Type
+                                {{ t(key="field-type", lang=lang) }}
                             {% elif group.category == "size" %}
-                                Size
+                                {{ t(key="field-size", lang=lang) }}
                             {% elif group.category == "uom" %}
-                                Unit
+                                {{ t(key="field-unit", lang=lang) }}
                             {% elif group.category == "order_source" %}
-                                Order source
+                                {{ t(key="field-order-source", lang=lang) }}
                             {% else %}
                                 {{ group.category }}
                             {% endif %}
